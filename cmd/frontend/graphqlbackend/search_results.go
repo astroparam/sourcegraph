@@ -544,7 +544,20 @@ func withMode(args search.TextParameters, st query.SearchType, versionContext *s
 		if !searchcontexts.IsGlobalSearchContextSpec(querySearchContextSpec) {
 			return false
 		}
-		return len(args.Query.Values(query.FieldRepo)) == 0 && len(args.Query.Values(query.FieldRepoGroup)) == 0 && len(args.Query.Values(query.FieldRepoHasFile)) == 0
+
+		// zoektGlobalQuery supports searching negating repo fields. So we
+		// only skip global search if we have an inclusive repo field.
+		var hasRepoField bool
+		query.VisitField(args.Query, query.FieldRepo, func(_ string, negated bool, _ query.Annotation) {
+			if !negated {
+				hasRepoField = true
+			}
+		})
+		if hasRepoField {
+			return false
+		}
+
+		return len(args.Query.Values(query.FieldRepoGroup)) == 0 && len(args.Query.Values(query.FieldRepoHasFile)) == 0
 	}
 
 	hasGlobalSearchResultType := args.ResultTypes.Has(result.TypeFile | result.TypePath | result.TypeSymbol)
