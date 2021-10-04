@@ -12,6 +12,8 @@ import (
 	"testing/quick"
 	"time"
 
+	"github.com/sourcegraph/sourcegraph/cmd/gitserver/domain"
+
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 
@@ -20,7 +22,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/endpoint"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
-	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 	searchbackend "github.com/sourcegraph/sourcegraph/internal/search/backend"
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
@@ -73,7 +74,7 @@ func TestSearchFilesInRepos(t *testing.T) {
 			// TODO we do not specify a rev when searching "foo/no-rev", so it
 			// is treated as an empty repository. We need to test the fatal
 			// case of trying to search a revision which doesn't exist.
-			return false, &gitserver.RevisionNotFoundError{Repo: repoName, Spec: "missing"}
+			return false, &domain.RevisionNotFoundError{Repo: repoName, Spec: "missing"}
 		default:
 			return false, errors.New("Unexpected repo")
 		}
@@ -129,7 +130,7 @@ func TestSearchFilesInRepos(t *testing.T) {
 	}
 
 	_, _, err = SearchFilesInReposBatch(context.Background(), args)
-	if !errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
+	if !errors.HasType(err, &domain.RevisionNotFoundError{}) {
 		t.Fatalf("searching non-existent rev expected to fail with RevisionNotFoundError got: %v", err)
 	}
 }
